@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:qr_code/src/home/player_view.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class HomeView extends StatefulWidget {
@@ -13,20 +14,20 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-
   final _qrKey = GlobalKey(debugLabel: 'QR');
+  late QRViewController _qrViewController;
+
   Barcode? _qrCodeResult;
-  QRViewController? _qrViewController;
 
   @override
-  void reassemble() {
+  void reassemble() async {
     super.reassemble();
 
     if (Platform.isAndroid) {
-      _qrViewController!.pauseCamera();
-    } else if (Platform.isIOS) {
-      _qrViewController!.resumeCamera();
+      await _qrViewController.pauseCamera();
     }
+
+    _qrViewController.resumeCamera();
   }
 
   @override
@@ -64,12 +65,21 @@ class _HomeViewState extends State<HomeView> {
 
     controller.scannedDataStream.listen((scanData) {
       setState(() => _qrCodeResult = scanData);
+
+      if (scanData.code != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PlayerView(videoURL: scanData.code!),
+          ),
+        );
+      }
     });
   }
 
   @override
   void dispose() {
-    _qrViewController!.dispose();
+    _qrViewController.dispose();
     super.dispose();
   }
 }
